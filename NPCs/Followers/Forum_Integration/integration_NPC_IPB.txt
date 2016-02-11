@@ -1,0 +1,15 @@
+prontera,156,92,6	script	Forum Integration	4_F_SURA,{
+	
+	mes "Hello!";
+	query_sql("SELECT forum_name, forum_status FROM `login` WHERE `account_id` = '" + getcharid(3) + "'", .@fName$, .@fStatus);
+	if(!.@fStatus)
+	{
+		mes "Account not integrated";
+		close;
+	}
+	
+	query_sql("SELECT posts FROM `forum_members` WHERE `name` = '" + .@fName$ + "'", .@messages);
+	
+	mes "Messages: " + .@messages;
+	close;
+}
