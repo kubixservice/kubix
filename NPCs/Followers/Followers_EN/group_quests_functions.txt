@@ -1,0 +1,51 @@
+/*
+THIS IS A NEW FUNCTIONS FOR GROUP QUESTS FOR FOLLOWERS
+NOT WORKING AND TRANSLATED RIGHT NOW!
+*/
+
+function	script	getInstanceInfo	{
+	// mission_instance_id > instance_name
+	switch(getarg(0)) {
+		case 1: return "Endless Tower";
+		case 2: return "Sealed Catacomb";
+		case 3: return "Orc's Memory";
+		case 4: return "Nidhoggur's Nest";
+		case 5: return "Mistwood Maze";
+		case 6: return "Culvert";
+		case 7: return "Octopus Cave";
+		case 8: return "Bangungot Hospital 2F";
+		case 9: return "Buwaya Cave";
+		case 10: return "Bakonawa Laker";
+		case 11: return "Wolfchev's Laboratory";
+		case 12: return "Old Glast Heim";
+		case 13: return "Eclage Interior";
+		default: return "Error";
+	}
+}
+
+//	arg(0)	->	standart_instance_count
+function	script	getInstanceCount	{
+	if(.instanceCount) .instanceCount = 0;
+	while(.instanceCount < getarg(0)) {
+		.instanceCount ++;
+	}
+	return .instanceCount;
+}
+
+
+function	script	getGroupQuest	{
+
+	for(.i = 0; .i < callfunc("getInstanceCount", 13); .i++) {
+		if(getd("instance_" + .i) > 0) {
+			.@instance_ready ++;
+		}
+	}
+
+	mes "Пройдено инстансов: " + .@instance_ready;
+	for(.a = 0; .a < callfunc("getInstanceCount", 13); .a ++) {
+		if(getd("instance_" + .a) > 0) {
+			mes callfunc("getInstanceInfo", getd("instance_" + .a));
+		}
+	}
+	close;
+}

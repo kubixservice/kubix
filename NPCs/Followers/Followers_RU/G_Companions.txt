@@ -1,0 +1,452 @@
+﻿/*
+Автор:	Kubix
+Дата: 18.11.2015
+Версия: 2.0.1
+
+*/
+
+/*
+	arg(0)			->	mission_level_req
+	arg(1)			->	special_mission
+	arg(2)			->	companion_id
+	arg(3)			->	mission_id
+*/
+
+function	script	get_Random_RE_Value	{
+
+	if(!$define_Random_Reward) return 0;
+	if(getd("ti_" + getarg(2) + getarg(3)) > gettimetick(2)) {
+		if(getd("val_" + getarg(2) + getarg(3)) == 0) setd "val_" + getarg(2) + getarg(3), 2;
+		return getd("val_" + getarg(2) + getarg(3));
+	}
+	if(getarg(1)) {
+		switch(getarg(1)) {
+			// special mission id
+			
+		}
+		setd "val_" + getarg(2) + getarg(3), .@value;
+		return getd("val_" + getarg(2) + getarg(3));
+	}
+	
+	switch(getarg(0)) {
+		case 0: default: return 0;
+		
+		case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+			.@value = rand(getarg(0), (BaseLevel / 10));
+			if(.@value <= 0) .@value = 2;
+			setd "ti_" + getarg(2) + getarg(3), gettimetick(2) + 86400;
+			setd "val_" + getarg(2) + getarg(3), .@value;
+			return getd("val_" + getarg(2) + getarg(3));
+	}
+	
+}
+
+/*
+	arg(0)			->	mission_id
+	arg(1)			->	companion_id
+	arg(2)			->	mission_level_req
+	arg(3)			->	mission_equip_req
+	arg(4)			->	mission_job_req
+	arg(5)			->	special_mission
+*/
+
+function	script	get_Random_Reward	{
+	if(!$define_Random_Reward) return 0;
+	if(getd("ti_" + getarg(1) + getarg(0)) > gettimetick(2)) return getd("re_" + getarg(1) + getarg(0));
+	switch(getarg(2)) {
+		case 0: default: return "Error code 'default and zero'";
+		
+		case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+			.@return_Reward = callfunc("reward_DB", getarg(0), getarg(2), getarg(5));
+			break;
+	}
+	
+	setd "ti_" + getarg(1) + getarg(0), gettimetick(2) + 86400;
+	setd "re_" + getarg(1) + getarg(0), .@return_Reward;
+	return getd("re_" + getarg(1) + getarg(0));
+}
+
+/*
+	arg(0)			->	mission_id
+	arg(1)			->	level_req
+	arg(2)			->	special_mission
+*/
+
+function	script	reward_DB	{
+
+	if(!getarg(0) || !getarg(1)) {
+		logmes "reward_DB: can't find mission_id or level_req.";
+		mes "Ошибка.";
+		mes "Error code : 1";
+		close;
+	}
+	
+	if(getarg(2)) {
+		switch(getarg(0)) {
+			// mission id for special missions
+		}
+		setd "re_" + getarg(1) + getarg(0), .@return_Reward;
+		return getd("re_" + getarg(1) + getarg(0));
+	}
+	
+	switch(getarg(1)){
+		case 0: default: end;
+		case 1: 
+			return $mission_Array_LVO[rand(getarraysize($mission_Array_LVO))];
+		case 2: 
+			return $mission_Array_LVT[rand(getarraysize($mission_Array_LVT))];
+		case 3: 
+			return $mission_Array_LVTH[rand(getarraysize($mission_Array_LVTH))];
+		case 4: 
+			return $mission_Array_LVF[rand(getarraysize($mission_Array_LVF))];
+		case 5: 
+			return $mission_Array_LVFI[rand(getarraysize($mission_Array_LVFI))];
+		case 6: 
+			return $mission_Array_LVS[rand(getarraysize($mission_Array_LVS))];
+		case 7:
+			return $mission_Array_LVSE[rand(getarraysize($mission_Array_LVSE))];
+	}
+	
+}
+
+/*
+	arg(0)			->	uniquie_id
+*/
+function	script	Companion_Create	{
+	.@companionName$ = .@companionDesc$ = .@companionCutin$ = .@companionSound$ = "";
+	.@companionClassID = .@new_id = 0;
+
+	if(!$define_betaver && garrison_map$ == "") end;
+	if (!getarg(0)) return 0;
+	callfunc("companion_Check_Char", getarg(0), getcharid(0));
+	query_sql("SELECT companion_name, companion_class, companion_desc, companion_cutin, companion_sound FROM `companion_list` WHERE `companion_unique_id` = '" + getarg(0) + "'", .@companionName$, .@companionClassID, .@companionDesc$, .@companionCutin$, .@companionSound$);
+	
+	.@new_id = getarg(0) + rand(11111,99999); // char companion uniquie_id.
+	
+	if (!$define_betaver && .@companionCutin$ != "Companion") cutin .@companionCutin$,4;
+	if (!$define_betaver && .@companionSound$ != "default") soundeffect .@companionSound$ + ".wav",0;
+	setd "next_level_exp" + getarg(0), $define_standartExp * 2 / $define_compRatesExp;
+	mes "Соратник добавлен!";
+	mes "'" + .@companionDesc$ + "'";
+	query_sql("INSERT INTO `garrison_companions` (`char_id`,`map`,`companion_name1`,`companion_job1`, `companion_id1`) VALUES ('" + getcharid(0) + "', '" + garrison_map$ + "', '" + .@companionName$ + "', '" + .@companionClassID + "', '"+getarg(0)+"')");
+	if(!$define_betaver) query_sql("UPDATE `garrisons` SET `companion_count`=`companion_count`+'1' WHERE `name` = '" + strcharinfo(0) + "'");
+	query_sql("UPDATE `companion_list` SET `companion_count_all`=`companion_count_all` + 1 WHERE `companion_unique_id` = '"+getarg(0)+"'");
+	close;
+}
+
+//	arg(0)		->	companion_id
+//	arg(1)		->	char_id
+function	script	companion_Check_Char	{
+	if(!getarg(0) || !getarg(1)) end;
+	
+	query_sql("SELECT char_id, companion_id1 FROM `garrison_companions` WHERE `char_id` = '"+getarg(1)+"' and `companion_id1` = '"+getarg(0)+"'", .@char_array_id, .@comp_array_id);
+	if(getarraysize(.@char_array_id) > 1 || getarraysize(.@comp_array_id) > 1) {
+		mes "У Вас уже есть этот соратник.";
+		close;
+	}
+	
+	return;
+}
+
+
+-	script	Companion_Manager	-1,{
+	function Calculating_Chance; function Get_Reward;
+	function Return_JobName;
+	mes "- Менеджер -";
+	mes "Выберите соратника";
+	next;
+
+	@comJob = @comBlvl = @comBexp = @comID = @comMID = @comAvailable = @comEqLev = .@i = 0;
+	@comName$ = @comMName$ = "";
+	query_sql("SELECT companion_name1, companion_job1, companion_baselevel1, companion_baseexp1, companion_id1, companion_missionid1, companion_missionname1, companion_available, companion_equiplv FROM `garrison_companions` WHERE `char_id` = '" + getcharid(0) + "'", @comName$, @comJob, @comBlvl, @comBexp, @comID, @comMID, @comMName$, @comAvailable, @comEqLev);
+	set .@menu$, "";
+	for (set .@i, 0; .@i < getarraysize(@comName$); set .@i, .@i + 1){
+		if (@comName$[.@i] != "") {
+			set .@menu$, .@menu$ + "-> ^FF0000" + @comName$[.@i] + "^000000 - " + Return_JobName(@comJob[.@i]);
+			set .@menu$, .@menu$ + ":";
+		}
+	}
+	set .@comSelected, select(.@menu$) - 1;
+
+	set .@next_level, getd("next_level_exp" + @comID[.@comSelected]);
+	mes " --- Информация о соратнике --- ";
+	mes "Имя : ^998888" + @comName$[.@comSelected] + "^000000";
+	mes "Класс : ^6699DD" + Return_JobName(@comJob[.@comSelected]) + "^000000.";
+	mes "Уровень : ^FF0000" + @comBlvl[.@comSelected] + "^000000.";
+	mes "Опыт : ^0000FF[" + @comBexp[.@comSelected] + " / "+.@next_level+"]^000000";
+	mes "Уровень предметов : ^998800" + @comEqLev[.@comSelected] + "^000000";
+	next;
+	switch (select("Забрать вознаграждение:Отправить на задание:Остальная информация")) {
+	case 1:
+		@cm_cid = @mission_id = @mission_state = @mission_job = @gc_cid = @gc_cj = 0;
+		query_sql("SELECT companion_missions.companion_id, companion_missions.mission_id, companion_missions.mission_state, companion_missions.mission_jobreq, garrison_companions.companion_id1, garrison_companions.companion_job1 FROM `companion_missions` LEFT JOIN `garrison_companions` ON garrison_companions.companion_id1 = companion_missions.companion_id WHERE companion_missions.`char_id` = '" + getcharid(0) + "' and companion_missions.`companion_id` = '" + @comID[.@comSelected] + "' and `mission_state` = 1", @cm_cid, @mission_id, @mission_state, @mission_job, @gc_cid, @gc_cj);
+
+		if (getd("companion_" + @comID[.@comSelected]) - gettimetick(2) <= 0 && @mission_id != 0 && @mission_state != 0) {
+
+			if (rand(100) > getd("mission_comp_chance" + @comID[.@comSelected])) {
+				mes "^FF0000Задание провалено!^000000";
+				query_sql("DELETE FROM `companion_missions` WHERE `mission_id` = '" + @mission_id + "' and `companion_id` = '" + @cm_cid + "'");
+				query_sql("UPDATE `garrison_companions` SET `companion_missionid1` = 0, `companion_missionname1` = 'mission' WHERE `companion_id1` = '"+@comID[.@comSelected]+"'");
+				setd "companion_" + @comID[.@comSelected], 0;
+				close;
+			}
+
+			switch (Get_Reward(@mission_id, @comID[.@comSelected])) {
+			case 0:
+				mes "- Менеджер -";
+				mes "Тест сообщение!";
+				close;
+			case 1:
+				mes "Задание выполнено!";
+				close;
+			case 2:
+				mes "- Менеджер -";
+				mes "Неправильный 'MissionID' или 'CompanionID'. Обратитесь к администратору";
+				close;
+			}
+		}
+		else {
+			set @companion_mission, getd("companion_" + @comID[.@comSelected]);
+			if (@companion_mission > 0) {
+				mes "- Менеджер -";
+				mes "Соратник на задании ещё " + callfunc("Time2Str", @companion_mission);
+			}
+			else {
+				mes "- Менеджер -";
+				mes "Соратник не был на задании.";
+			}
+			close;
+		}
+	case 2:
+		if (getd("companion_" + @comID[.@comSelected]) - gettimetick(2) > 0) {
+			set @companion_mission, getd("companion_" + @comID[.@comSelected]);
+			mes "- Менеджер -";
+			mes "Соратник на задании ещё " + callfunc("Time2Str", @companion_mission);
+			close;
+		}
+		@MIDs = @mID = @mTime = @mReward1 = @mRewardVal1 = @mReward2 = @mRewardVal2 = @mReward3 = @mRewardVal3 = @mCharExp = @mCharExp2 = @mCompExp = @mCompExp2 = @mZenyReward = @mReqLevel = 0;
+		@mName$ = @mType$ = @mDesc$ = "";
+		query_sql("SELECT * FROM `garrison_missions` WHERE `mission_reqlevel` = '" + @comBlvl[.@comSelected] + "'", @MIDs, @mID, @mName$, @mType$, @mDesc$, @mTime, @mReward1, @mRewardVal1, @mReward2, @mRewardVal2, @mReward3, @mRewardVal3, @mCharExp, @mCharExp2, @mCompExp, @mCompExp2, @mZenyReward, @mReqLevel, @mJobReq, @mLevReq, @special);
+		set .@menu$, "";
+		for (set .@a, 0; .@a < getarraysize(@mName$); set .@a, .@a + 1){
+			if (@mName$[.@a] != "") {
+				set .@menu$, .@menu$ + " - ^6699DD" + @mName$[.@a] + "^000000 -> " + Return_JobName(@mJobReq[.@a]);
+				set .@menu$, .@menu$ + ":";
+			}
+		}
+		set .@missionSelected, select(.@menu$) - 1;
+
+		mes " -- ^6699DDТребования^000000 -- ";
+		if (@comJob[.@comSelected] == @mJobReq[.@missionSelected]) mes "Класс соратника : ^00FF00" + Return_JobName(@mJobReq[.@missionSelected]) + "^000000";
+		else if (@comJob[.@comSelected] != @mJobReq[.@missionSelected]) mes "Класс соратника  : ^FF0000" + Return_JobName(@mJobReq[.@missionSelected]) + "^000000";
+		mes "Название : " + @mName$[.@missionSelected] + ".";
+		mes "Время : " + callfunc("Time2Str2", @mTime[.@missionSelected]);
+		mes "^669900'" + @mDesc$[.@missionSelected] + "'^000000";
+		mes "Уровень предметов : ^998800" + @mLevReq[.@missionSelected] + "^000000";
+		mes "Шанс выполнения : " + Calculating_Chance(@mID[.@missionSelected], @comID[.@comSelected], @mJobReq[.@missionSelected], @comJob[.@comSelected], @mLevReq[.@missionSelected], @comEqLev[.@comSelected]) + "%";
+		mes "-----------------------------------";
+		mes " -- ^FF0000Награды^000000 -- ";
+		if(!$define_Random_Reward) {
+			if (@mReward1[.@missionSelected] && @mRewardVal1[.@missionSelected]) mes "->" + getitemname(@mReward1[.@missionSelected]) + ", " + @mRewardVal1[.@missionSelected] + "oo<-";
+			if (@mReward2[.@missionSelected] && @mRewardVal2[.@missionSelected]) mes "->" + getitemname(@mReward2[.@missionSelected]) + ", " + @mRewardVal2[.@missionSelected] + "oo<-";
+			if (@mReward3[.@missionSelected] && @mRewardVal3[.@missionSelected]) mes "->" + getitemname(@mReward3[.@missionSelected]) + ", " + @mRewardVal3[.@missionSelected] + "oo<-";
+		} else {
+			mes "Награда : " + getitemname(callfunc("get_Random_Reward", @mID[.@missionSelected], @comID[.@comSelected], @comBlvl[.@comSelected], @mLevReq[.@missionSelected], @mJobReq[.@missionSelected], @special[.@missionSelected]));
+			mes "Количество : " + callfunc("get_Random_RE_Value", @comBlvl[.@comSelected], @special[.@missionSelected], @comID[.@comSelected], @mID[.@missionSelected]);
+		}
+		mes "Опыт соратника +^FF0000" + (@mCompExp[.@missionSelected]) + "^000000.";
+		mes "-----------------------------------";
+		next;
+		if (select("Отправить соратника на задание:Отмена") == 2) close;
+		if (@comJob[.@comSelected] != @mJobReq[.@missionSelected]) {
+			mes "- Менеджер -";
+			mes "^FF0000Класс соратника не подходит для этого задания!";
+			mes "Хотите продолжить?^000000";
+			next;
+			if (select("Да:Нет") == 2) close;
+		}
+		setd("companion_" + @comID[.@comSelected], gettimetick(2) + @mTime[.@missionSelected]);
+		query_sql("INSERT INTO `companion_missions` (`char_id`,`companion_id`,`mission_id`,`mission_state`, `mission_time`, `mission_jobreq`) VALUES ('" + getcharid(0) + "', '" + @comID[.@comSelected] + "', '" + @mID[.@missionSelected] + "', '1', '" + @mTime[.@missionSelected] + "', '" + @mJobReq[.@missionSelected] + "')");
+		query_sql("UPDATE `garrison_companions` SET `companion_missionid1` = '"+@mID[.@missionSelected]+"', `companion_missionname1` = '"+@mName$[.@missionSelected]+"' WHERE `companion_id1` = '"+@comID[.@comSelected]+"'");
+		mes "- Менеджер -";
+		mes "Соратник отправлен на задание ^FF0000" + @mName$[.@missionSelected] + "^000000";
+		logmes "> " + strcharinfo(0) + " companion started quest. ID " + @mName$[.@missionSelected];
+		close;
+
+	case 3:
+		@com_Wlvl = @com_Alvl = @com_Wid = @com_Aid = 0;
+		query_sql("SELECT companion_weaponid, companion_weaponlv, companion_armorid, companion_armorlv FROM `garrison_companions` WHERE `companion_id1` = '" + @comID[.@comSelected] + "'", @com_Wid, @com_Wlvl, @com_Aid, @com_Alvl);
+		mes "- Менеджер -";
+		mes "Оружие ^6699DD" + getitemname(@com_Wid) + "^000000. ^0000FF[" + @com_Wlvl + "]^000000.";
+		mes "Броня ^6699DD" + getitemname(@com_Aid) + "^000000. ^0000FF[" + @com_Alvl + "]^000000.";
+		mes "Уровень предметов : ^998800" + @comEqLev[.@comSelected] + "^000000";
+		next;
+		switch (select("Улучшить оружие:Улучшить броню")) {
+		case 1:
+			set .@menu$, "";
+			for (set .@c, 0; .@c < getarraysize(.weaponID); set .@c, .@c + 1){
+				if (.weaponID[.@c] != 0) {
+					set .@menu$, .@menu$ + "-> ^9888DD" + getitemname(.weaponID[.@c]) + "^000000.";
+					set .@menu$, .@menu$ + ":";
+				}
+			}
+			set .@weaponSelected, select(.@menu$) - 1;
+
+			if (countitem(.weaponID[.@weaponSelected]) < 1) {
+				mes "- Менеджер -";
+				mes "У Вас нет этого предмета.";
+				close;
+			}
+			delitem .weaponID[.@weaponSelected], 1;
+			query_sql("UPDATE `garrison_companions` SET `companion_weaponid` = '"+.weaponID[.@weaponSelected]+"', `companion_weaponlv` = '"+.weaponLVL[.@weaponSelected]+"', `companion_equiplv`=`companion_equiplv` + '"+.weaponLVL[.@weaponSelected]+"' WHERE `companion_id1` = '"+@comID[.@comSelected]+"'");
+			mes "Готово.";
+			close;
+
+		case 2:
+			set .@menu$, "";
+			for (set .@c, 0; .@c < getarraysize(.armorID); set .@c, .@c + 1){
+				if (.armorID[.@c] != 0) {
+					set .@menu$, .@menu$ + "-> ^9888DD" + getitemname(.armorID[.@c]) + "^000000.";
+					set .@menu$, .@menu$ + ":";
+				}
+			}
+			set .@armorSelected, select(.@menu$) - 1;
+
+			if (countitem(.armorID[.@armorSelected]) < 1) {
+				mes "- Менеджер -";
+				mes "У Вас нет этого предмета.";
+				close;
+			}		
+			delitem .armorID[.@armorSelected], 1;
+			query_sql("UPDATE `garrison_companions` SET `companion_armorid` = '"+.armorID[.@armorSelected]+"', `companion_armorlv` = '"+.armorLVL[.@armorSelected]+"', `companion_equiplv`=`companion_equiplv` + '"+.armorLVL[.@armorSelected]+"' WHERE `companion_id1` = '"+@comID[.@comSelected]+"'");
+			mes "Готово.";
+			close;
+		}
+	}
+
+	//	arg(0)			->	mission_id
+	//	arg(1)			->	companion_id
+	function	Get_Reward	{
+		if (!getarg(0) || !getarg(1)) return 2;
+		@reward1 = @reward2 = @reward3 = @rewardval1 = @rewardval2 = @rewardval3 = @zeny_reward = @com_select_job = @com_base_lev = @com_base_exp = @char_bexp = @char_jexp = @comp_bexp = @levelreq = 0;
+		
+		query_sql("SELECT mission_reward1, mission_rewardval1, mission_reward2, mission_rewardval2, mission_reward3, mission_rewardval3, mission_charbaseexp, mission_charjobexp, mission_compbaseexp, zeny_reward, mission_reqlevel, special_mission FROM `garrison_missions` WHERE `mission_id` = '" + getarg(0) + "'", @reward1, @rewardval1, @reward2, @rewardval2, @reward3, @rewardval3, @char_bexp, @char_jexp, @comp_bexp, @zeny_reward, @levelreq, @special_mission);
+		query_sql("UPDATE `garrison_companions` SET `companion_missionid1` = 0, `companion_missionname1` = 'mission' WHERE `companion_id1` = '"+@comID[.@comSelected]+"'");
+		setd "companion_" + getarg(1), 0;
+		if($define_Random_Reward) {
+			getitem getd("re_" + getarg(1) + getarg(0)), getd("val_" + getarg(1) + getarg(0));
+		} 
+		else {
+			for (.h = 0; .h < getarraysize(@reward1); .h++) {
+				if (@reward1[.h] != 0) {
+					if (@reward1 != 0 && @rewardval1 != 0) getitem @reward1, @rewardval1;
+					if (@reward2 != 0 && @rewardval2 != 0) getitem @reward2, @rewardval2;
+					if (@reward3 != 0 && @rewardval3 != 0) getitem @reward3, @rewardval3;
+				}
+			}
+		}
+				if (@zeny_reward != 0) {
+					garrison_resources += @zeny_reward;
+					query_sql("UPDATE `garrisons` SET `garrison_resources`= '"+garrison_resources+"' WHERE `name` = '"+strcharinfo(0)+"'");
+					dispbottom "Ресурсы гарнизона + " + @zeny_reward + ". Всего - " + garrison_resources;
+				}
+				if(@char_bexp) getexp @char_bexp, 0;
+				if(@char_jexp) getexp 0, @char_jexp;
+				query_sql("DELETE FROM `companion_missions` WHERE `mission_id` = '" + getarg(0) + "' and `companion_id` = '" + getarg(1) + "'");
+				query_sql("SELECT companion_job1, companion_baselevel1, companion_baseexp1 FROM `garrison_companions` WHERE `companion_id1` = '" + getarg(1) + "'", @com_select_job, @com_base_lev, @com_base_exp);
+				if ((@com_base_exp + @comp_bexp) >= getd("next_level_exp" + getarg(1))) {
+					setd "next_level_exp" + getarg(1), $define_standartExp * (@com_base_lev * 8) / $define_compRatesExp;
+					set .@next_level, getd("next_level_exp" + getarg(1));
+					set .@now_exp, @com_base_exp + @comp_bexp;
+					mes "- Менеджер -";
+					mes "^FF0000Задание выполнено! Новый уровень!^000000";
+					mes "Текущий опыт ^0000FF[" + .@now_exp + " / " + .@next_level + "]^000000!";
+					query_sql("UPDATE `garrison_companions` SET `companion_baselevel1` = `companion_baselevel1` + '1', `companion_baseexp1` = `companion_baseexp1` + '" + @comp_bexp + "' WHERE `companion_id1` = '"+getarg(1)+"'");
+					return 1;
+				}
+				else {
+					set .@next_level, getd("next_level_exp" + getarg(1));
+					set .@now_exp, @com_base_exp + @comp_bexp;
+					mes "- Менеджер -";
+					mes "^6699DDЗадание выполнено, опыт: ^669900" + @comp_bexp + "^000000 ^6699DDпоздравляем!^000000";
+					mes "Текущий опыт ^0000FF[" + .@now_exp + " / " + .@next_level + "]^000000!";
+					query_sql("UPDATE `garrison_companions` SET `companion_baseexp1` = `companion_baseexp1` + '" + @comp_bexp + "' WHERE `companion_id1` = '" + getarg(1) + "'");
+					return 1;
+				}
+	}
+
+	//	arg(0)					->	mission_id
+	//	arg(1)					->	companion_id
+	//	arg(2)					->	mission_jobreq
+	//	arg(3)					->	companion_job
+	//	arg(4)					->	equip_level_sum_needed
+	//	arg(5)					->	equip_level_sum_companion
+	function	Calculating_Chance	{
+		if (getarg(0) < 0 || getarg(1) < 0 || getarg(2) < 0 || getarg(3) < 0) return 0;
+		setd "mission_comp_chance" + getarg(1), 0;
+		
+		if (getarg(4) > getarg(5)) {
+			if($define_DebugMode) debugmes "getarg(4) > getarg(5)";
+			.@set_chance = getarg(4) - getarg(5);
+			.@set_chance2 += $define_baseChance + (getarg(5) / .@set_chance);
+		}
+		else if (getarg(5) > getarg(4)) {
+			if($define_DebugMode) debugmes "getarg(5) > getarg(4)";
+			.@set_chance = getarg(5) - getarg(4);
+			.@set_chance2 = (5 + $define_baseChance) + (3 * (.@set_chance / 2));
+		}
+		else {
+			if($define_DebugMode) debugmes "ELSE";
+			.@set_chance2 = $define_baseChance + 5;
+		}
+		
+		if(getarg(2) == getarg(3)) .@set_chance2 += 15;
+		else .@set_chance2 -= 15;
+		
+		setd "mission_comp_chance" + getarg(1), .@set_chance2;
+
+		if (getd("mission_comp_chance" + getarg(1)) > 100) setd "mission_comp_chance" + getarg(1), 100;
+		else if (getd("mission_comp_chance" + getarg(1)) < 0) setd "mission_comp_chance" + getarg(1), 0;
+
+		return getd("mission_comp_chance" + getarg(1));
+	}
+
+	//	arg(0)		->	job_id
+	function	Return_JobName	{
+		switch (getarg(0)) {
+		case 0: return "Воин";
+		case 1: return "Маг";
+		case 2: return "Лекарь";
+		case 3: return "Убийца";
+		default: return "Ошибка";
+		}
+	}
+	
+	
+	
+	OnInit:
+	$define_betaver = 1;
+	$define_standartExp = 1500000;
+	$define_compRatesExp = 100;
+	$define_conpRatesOther = 100;
+	$define_baseChance = 25;
+	$define_Random_Reward = 1;
+	$define_DebugMode = 1;
+	$instance_count_id = 10;
+	
+	setarray .weaponID[0], 1208, 1225, 1599;
+	setarray .armorID[0], 2357, 2358, 2359;
+	
+	setarray .weaponLVL[0], 5, 10, 20;
+	setarray .armorLVL[0], 5, 10, 20;
+	
+	setarray $mission_Array_LVO[0], 909, 970, 971, 7033, 921, 931, 993;
+	setarray $mission_Array_LVT[0], 909, 970, 971, 7033, 921, 931, 993;
+	setarray $mission_Array_LVTH[0], 909, 970, 971, 7033, 921, 931, 993;
+	setarray $mission_Array_LVF[0], 909, 970, 971, 7033, 921, 931, 993;
+	setarray $mission_Array_LVFI[0], 909, 970, 971, 7033, 921, 931, 993;
+	setarray $mission_Array_LVS[0], 909, 970, 971, 7033, 921, 931, 993;
+	setarray $mission_Array_LVSE[0], 909, 970, 971, 7033, 921, 931, 993;
+	end;
+}
+prontera, 151, 181, 6	duplicate(Companion_Manager)	Manager#08	100
