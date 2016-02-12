@@ -2,8 +2,8 @@
 // ====================================================================================================
 -	script	EC_Settings	-1,{
 OnInit:
-	set $EC_AshID,6000;		// ItemID
-	set $EC_GM,60;			// Min GM level to control the cellar
+	$EC_AshID = 6000;		// ItemID
+	$EC_GM = 60;			// Min GM level to control the cellar
 	end;
 }
 
@@ -148,10 +148,10 @@ L_Enter:
 OnInstanceInit:
 	if(strnpcinfo(3) == "EC_Manager")
 		end;
-	set .@k,$EC_Floor;
+	.@k = $EC_Floor;
 	while(.@k < 77){
 		disablenpc instance_npcname("ECwarp_"+.@k);
-		set .@k,.@k+1;
+		.@k ++;
 	}
 	if($EC_Floor <= 77){
 		getmapxy(.@map$,.@x,.@y,1,("ECwarp_"+$EC_Floor));
@@ -162,7 +162,7 @@ OnInstanceInit:
 	end;
 	
 OnMobDead:
-	set 'EC_Mobs,'EC_Mobs-1;
+	'EC_Mobs --;
 	if('EC_Mobs){
 		instance_announce -1,"Monsters remaining on Floor "+$EC_Floor+": "+'EC_Mobs,bc_map,0x00FF00;
 		end;
@@ -172,7 +172,7 @@ OnMobDead:
 	if($EC_Floor == 40) 
 		donpcevent instance_npcname("ECwarp_40")+"::OnEnableAshtimer";
 	instance_announce -1,"All monsters on the "+$EC_Floor+($EC_Floor % 10 == 1 ? "st" : ($EC_Floor % 10 == 2 ? "nd" : ($EC_Floor % 10 == 3 ? "rd" : "th")))+" level have been defeated.",bc_map;
-	set $EC_Floor,$EC_Floor+1;
+	$EC_Floor ++;
 	if($EC_Floor == 77)
 		callfunc "EC_Spawns",$EC_Floor,"5@new";
 	else if($EC_Floor < 77)
@@ -285,12 +285,12 @@ OnPoripori:
 			next;
 			input .@level,0,77;
 			if(.@level == 0) close;
-			set $EC_Floor,.@level;
+			$EC_Floor = .@level;
 			killmonsterall "1@new";
 			killmonsterall "2@new";
 			killmonsterall "3@new";
 			killmonsterall "4@new";
-			for(set .@k,1; .@k < $EC_Floor && .@k < 77; set .@k,.@k + 1)
+			for(.@k = 1; .@k < $EC_Floor && .@k < 77; .@k ++)
 				enablenpc instance_npcname("ECwarp_"+.@k);
 			donpcevent instance_npcname("EC_Manager")+"::OnInstanceInit";
 			mes "Should I warp you there now?";
@@ -308,8 +308,8 @@ OnPoripori:
 			else {
 				setarray .@warpx[0],96,184,270,354;
 				setarray .@warpy[0],393,309,221,137,51;
-				set .@x,.@warpx[((.@level-1) % 20) % 4];
-				set .@y,.@warpy[((.@level-1) % 20) / 4];
+				.@x = .@warpx[((.@level-1) % 20) % 4];
+				.@y = .@warpy[((.@level-1) % 20) / 4];
 				warp has_instance(((.@level-1) / 20 + 1)+"@new"),.@x,.@y;
 			}
 			close;
@@ -317,9 +317,9 @@ OnPoripori:
 			mes "Floor: "+$EC_Floor;
 			mes "Lasttime varibale: "+'EC_Lasttime;
 			if($EC_Floor == 77)
-				set .@map$,has_instance("5@new");
+				.@map$ = has_instance("5@new");
 			else if($EC_Floor < 77)
-				set .@map$,has_instance((($EC_Floor-1) / 20 + 1)+"@new");
+				.@map$ = has_instance((($EC_Floor-1) / 20 + 1)+"@new");
 			mes "Alive mobs(variable): "+'EC_Mobs;
 			mes "Alive mobs(real): "+mobcount(.@map$,"all");
 			close;
@@ -352,11 +352,11 @@ OnPoripori:
 		mes "Only the party leader can give me a Dark Ash.";
 		close;
 	}
-	set $EC_Floor,41;
+	$EC_Floor = 41;
 	killmonsterall has_instance("1@new");
 	killmonsterall has_instance("2@new");
 	callfunc "EC_Spawns",$EC_Floor,(($EC_Floor-1) / 20 + 1)+"@new";
-	for(set .@k,1; .@k < $EC_Floor && .@k < 77; set .@k,.@k + 1)
+	for(.@k = 1; .@k < $EC_Floor && .@k < 77; .@k ++)
 		enablenpc instance_npcname("ECwarp_"+.@k);
 	delitem $EC_AshID,1;
 	warp has_instance("3@new"),96,393; 
@@ -392,70 +392,70 @@ OnPoripori:
 function	script	EC_Spawns	{
 	switch(getarg(0)){
 	case 1:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),91,349,137,375,"Fabre",1007,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,349,137,375,"Picky",1049,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,349,137,375,"Picky",1050,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 2:
-		set 'EC_Mobs,30;
+		'EC_Mobs =30;
 		areamonster getarg(1),179,349,225,375,"Willow",1010,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Wolf",1013,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Creamy",1018,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 3:
-		set 'EC_Mobs,30;
+		'EC_Mobs =30;
 		areamonster getarg(1),265,349,311,375,"Condor",1009,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,349,311,375,"Peco Peco",1019,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,349,311,375,"Muka",1055,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 4:
-		set 'EC_Mobs,26;
+		'EC_Mobs =26;
 		areamonster getarg(1),349,349,395,375,"Greatest General",1277,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,349,395,375,"Eddga",1115,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 5:
-		set 'EC_Mobs,30;
+		'EC_Mobs =30;
 		areamonster getarg(1),91,265,137,291,"Spore",1014,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,265,137,291,"Poison Spore",1077,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 6:
-		set 'EC_Mobs,WARPNPC;
+		'EC_Mobs =WARPNPC;
 		areamonster getarg(1),179,265,225,291,"Crab",1073,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Shellfish",1074,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Aster",1266,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 7:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),265,265,311,291,"Vadon",1066,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Cornutus",1067,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Marina",1141,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Plankton",1161,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 8:
-		set 'EC_Mobs,31;
+		'EC_Mobs =31;
 		areamonster getarg(1),349,265,395,291,"Garm Baby",1515,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Marine Sphere",1142,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Garm",1252,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 9:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),91,177,137,203,"Metaller",1058,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,177,137,203,"Magnolia",1138,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 10:
-		set 'EC_Mobs,WARPNPC;
+		'EC_Mobs =WARPNPC;
 		areamonster getarg(1),179,177,225,203,"Coco",1104,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,177,225,203,"Caramel",1103,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,177,225,203,"Horn",1128,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 11:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),265,177,311,203,"Ambernite",1023,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,177,311,203,"Eggyra",1116,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 12:
-		set 'EC_Mobs,41;
+		'EC_Mobs =41;
 		areamonster getarg(1),349,177,395,203,"Megalith",1274,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,177,395,203,"Panzer Goblin",1308,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,177,395,203,"Rotar Zairo",1392,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -463,19 +463,19 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),349,177,395,203,"Tao Gunka",1583,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 13:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),91,94,137,119,"Smokie",1056,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,94,137,119,"Giearth",1121,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,94,137,119,"Martin",1145,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,94,137,119,"Raggler",1254,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 14:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),179,94,225,119,"Worm Tail",1024,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Stem Worm",1215,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 15:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),265,94,311,119,"Christmas Jakk",1244,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Christmas Goblin",1245,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Christmas Cookie",1246,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -483,32 +483,32 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),265,94,311,119,"Christmas Orc",1588,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 16:
-		set 'EC_Mobs,51;
+		'EC_Mobs =51;
 		areamonster getarg(1),349,94,395,119,"Antonio",1247,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,94,395,119,"Santa Poring",1062,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,94,395,119,"Stormy Knight",1251,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 17:
-		set 'EC_Mobs,46;
+		'EC_Mobs =46;
 		areamonster getarg(1),91,7,137,33,"Roda Frog",1012,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,7,137,33,"Thara Frog",1034,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,7,137,33,"Poison Toad",1402,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,7,137,33,"Toad",1089,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 18:
-		set 'EC_Mobs,41;
+		'EC_Mobs =41;
 		areamonster getarg(1),179,7,225,33,"Lunatic",1063,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,7,225,33,"Spring Rabbit",1322,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,7,225,33,"Eclipse",1093,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 19:
-		set 'EC_Mobs,41;
+		'EC_Mobs =41;
 		areamonster getarg(1),265,7,311,33,"Yoyo",1057,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Mime Monkey",1585,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Choco",1214,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 20:
-		set 'EC_Mobs,41;
+		'EC_Mobs =41;
 		areamonster getarg(1),349,7,395,33,"Ghoul",1036,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,7,395,33,"Myst",1151,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,7,395,33,"Vitata",1176,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -516,30 +516,30 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),349,7,395,33,"Dracula",1389,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 21:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),91,349,137,375,"Stainer",1174,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,349,137,375,"Brilight",1211,20,instance_npcname("EC_Manager")+"::OnMobDead";		break;
 	case 22:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),179,349,225,375,"Marc",1045,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Tri Joint",1279,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Fur Seal",1317,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Sea Otter",1323,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 23:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),265,349,311,375,"Wood Goblin",1880,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,349,311,375,"Les",1881,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,349,311,375,"Mavka",1884,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 24:
-		set 'EC_Mobs,31;
+		'EC_Mobs =31;
 		areamonster getarg(1),349,349,395,375,"Babayaga",1882,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,349,395,375,"Uzhas",1883,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,349,395,375,"Gopinich",1885,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 25:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),91,265,137,291,"Kaho",1072,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,265,137,291,"Blazzer",1367,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,265,137,291,"Driller",1380,15,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -547,19 +547,19 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),91,265,137,291,"Minorous",1149,5,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 26:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),179,265,225,291,"Dokebi",1110,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Am Mut",1301,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Sageworm",1281,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 27:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),265,265,311,291,"Savage",1166,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Gullinbursti",1311,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Goat",1372,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 28:
-		set 'EC_Mobs,71;
+		'EC_Mobs =71;
 		areamonster getarg(1),349,265,395,291,"Bettle King",1494,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Bacsojin",1518,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Chung E",1519,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -567,18 +567,18 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),349,265,395,291,"Lady Tanee",1688,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 29:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),91,177,137,203,"Requiem",1164,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,177,137,203,"Zerom",1178,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,177,137,203,"Skeleton General",1290,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 30:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),179,177,225,203,"Leaf Cat",1586,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,177,225,203,"Wild Rose",1261,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 31:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),265,177,311,203,"Dustiness",1114,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,177,311,203,"Giant Spider",1304,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,177,311,203,"Porcellio",1619,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -586,7 +586,7 @@ function	script	EC_Spawns	{
 
 		break;
 	case 32:
-		set 'EC_Mobs,51;
+		'EC_Mobs =51;
 		areamonster getarg(1),349,177,395,203,"Mineral",1614,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,177,395,203,"Waste Stove",1617,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,177,395,203,"Noxious",1620,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -595,48 +595,48 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),349,177,395,203,"RSX-006",1623,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 33:
-		set 'EC_Mobs,WARPNPC;
+		'EC_Mobs =WARPNPC;
 		areamonster getarg(1),91,94,137,119,"Bathory",1102,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,94,137,119,"Sohee",1170,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,94,137,119,"Violy",1390,15,instance_npcname("EC_Manager")+"::OnMobDead";		break;
 	case 34:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),179,94,225,119,"Dragon Tail",1321,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Geographer",1368,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Galapago",1391,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Kapha",1406,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 35:
-		set 'EC_Mobs,WARPNPC;
+		'EC_Mobs =WARPNPC;
 		areamonster getarg(1),265,94,311,119,"Rice Cake Boy",1409,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Boiled Rice",1520,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Baby Leopard",1415,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 36:
-		set 'EC_Mobs,51;
+		'EC_Mobs =51;
 		areamonster getarg(1),349,94,395,119,"Disguise",1506,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,94,395,119,"Dark Priest",1198,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,94,395,119,"Lord of Death",1373,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 37:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),91,7,137,33,"Wootan Shooter",1498,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,7,137,33,"Wootan Fighter",1499,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 38:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),179,7,225,33,"Mole",1628,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,7,225,33,"Maya Purple",1289,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 39:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),265,7,311,33,"Safeguard Chief",1981,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Orc Sniper",1982,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Depraved Orc Spirit",1983,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Shaman Cargalache",1984,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 40:
-		set 'EC_Mobs,41;
+		'EC_Mobs =41;
 		areamonster getarg(1),349,7,395,33,"Photon Cannon",1664,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,7,395,33,"Photon Cannon",1665,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,7,395,33,"Photon Cannon",1666,10,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -644,97 +644,97 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),349,7,395,33,"Vesper",1685,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 41:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),91,349,137,375,"Remover",1682,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,349,137,375,"Gemini-S58",1681,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 42:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),179,349,225,375,"Breeze",1692,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Roween",1782,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 43:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),265,349,311,375,"Gremlin",1632,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,349,311,375,"Hodremlin",1773,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 44:
-		set 'EC_Mobs,51;
+		'EC_Mobs =51;
 		areamonster getarg(1),349,349,395,375,"Novus",1715,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,349,395,375,"Novus",1716,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,349,395,375,"Detale",1719,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case WARPNPC:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),91,265,137,291,"Banshee Master",1974,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,265,137,291,"Banshee",1868,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 46:
-		set 'EC_Mobs,55;
+		'EC_Mobs =55;
 		areamonster getarg(1),179,265,225,291,"Beholder Master",1975,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Beholder",1633,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Seeker",1774,15,instance_npcname("EC_Manager")+"::OnMobDead";
 
 		break;
 	case 47:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),265,265,311,291,"Cobalt Mineral",1976,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Heavy Metaling",1977,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 48:
-		set 'EC_Mobs,61;
+		'EC_Mobs =61;
 		areamonster getarg(1),349,265,395,291,"Alicel",1735,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Constant",1738,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Kiel D-01",1734,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 49:
-		set 'EC_Mobs,55;
+		'EC_Mobs =55;
 		areamonster getarg(1),91,177,137,203,"Frus",1753,55,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 50:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),179,177,225,203,"Hell Apocalips",1978,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,177,225,203,"Apocalips",1365,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 51:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),265,177,311,203,"Zakudam",1979,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,177,311,203,"Archdam",1668,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 52:
-		set 'EC_Mobs,51;
+		'EC_Mobs =51;
 		areamonster getarg(1),349,177,395,203,"Aunoe",1796,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,177,395,203,"Fanat",1797,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,177,395,203,"Gloom Under Night",1768,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 53:
-		set 'EC_Mobs,40;
+		'EC_Mobs =40;
 		areamonster getarg(1),91,94,137,119,"Zombie Slaughter",1864,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,94,137,119,"Hell Poodle",1866,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 54:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),179,94,225,119,"Siroma",1776,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Snowier",1775,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Ice Titan",1777,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 55:
-		set 'EC_Mobs,75;
+		'EC_Mobs =75;
 		areamonster getarg(1),265,94,311,119,"Iceicle",1789,75,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 56:
-		set 'EC_Mobs,31;
+		'EC_Mobs =31;
 		areamonster getarg(1),349,94,395,119,"Gazeti",1778,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,94,395,119,"Ktullanux",1779,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 57:
-		set 'EC_Mobs,WARPNPC;
+		'EC_Mobs =WARPNPC;
 		areamonster getarg(1),91,7,137,33,"Magmaring",1836,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,7,137,33,"Knocker",1838,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,7,137,33,"Imp",1837,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 58:
-		set 'EC_Mobs,15;
+		'EC_Mobs =15;
 		areamonster getarg(1),179,7,225,33,"Ghostring",1120,3,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,7,225,33,"Angeling",1096,3,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,7,225,33,"Deviling",1582,3,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -742,84 +742,84 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),179,7,225,33,"Mastering",1090,3,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 59:
-		set 'EC_Mobs,48;
+		'EC_Mobs =48;
 		areamonster getarg(1),265,7,311,33,"Thanatos Odium",1704,12,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Thanatos Despero",1705,12,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Thanatos Maero",1706,12,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,7,311,33,"Thanatos Dolor",1707,12,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 60:
-		set 'EC_Mobs,1;
+		'EC_Mobs =1;
 		areamonster getarg(1),349,7,395,33,"Thanatos Phantom",1708,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 61:
-		set 'EC_Mobs,80;
+		'EC_Mobs =80;
 		areamonster getarg(1),91,349,137,375,"Pinguicula",1995,40,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,349,137,375,"Dark Pinguicula",2015,40,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 62:
-		set 'EC_Mobs,90;
+		'EC_Mobs =90;
 		areamonster getarg(1),179,349,225,375,"Nepenthes",1988,60,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,349,225,375,"Luciola Vespa",1994,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 63:
-		set 'EC_Mobs,70;
+		'EC_Mobs =70;
 		areamonster getarg(1),265,349,311,375,"Naga",1993,50,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,349,311,375,"Cornus",1992,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 64:
-		set 'EC_Mobs,17;
+		'EC_Mobs =17;
 		areamonster getarg(1),349,349,395,375,"Hillslion",1989,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,349,395,375,"Tendril Lion",1991,2,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 65:
-		set 'EC_Mobs,75;
+		'EC_Mobs =75;
 		areamonster getarg(1),91,265,137,291,"Centipede Larva",1999,50,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,265,137,291,"Centipede",1987,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 66:
-		set 'EC_Mobs,80;
+		'EC_Mobs =80;
 		areamonster getarg(1),179,265,225,291,"Draco Egg",2014,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Draco",2013,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,265,225,291,"Tatacho",1986,40,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 67:
-		set 'EC_Mobs,60;
+		'EC_Mobs =60;
 		areamonster getarg(1),265,265,311,291,"Bradium Golem",2024,30,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Stalactic Golem",1278,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,265,311,291,"Lava Golem",1366,20,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 68:
-		set 'EC_Mobs,12;
+		'EC_Mobs =12;
 		areamonster getarg(1),349,265,395,291,"Tatacho",1986,10,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),349,265,395,291,"Hardrock Mammoth",1990,2,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 69:
-		set 'EC_Mobs,75;
+		'EC_Mobs =75;
 		areamonster getarg(1),91,177,137,203,"Aqua Elemental",2016,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,177,137,203,"Rhyncho",2020,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),91,177,137,203,"Phylla",2021,25,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 70:
-		set 'EC_Mobs,50;
+		'EC_Mobs =50;
 		areamonster getarg(1),179,177,225,203,"Ancient Tree",2019,35,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,177,225,203,"Dark Shadow",2023,15,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 71:
-		set 'EC_Mobs,24;
+		'EC_Mobs =24;
 		areamonster getarg(1),265,177,311,203,"Rata",2017,12,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,177,311,203,"Duneyrr",2018,12,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 72:
-		set 'EC_Mobs,1;
+		'EC_Mobs =1;
 		areamonster getarg(1),349,177,395,203,"Nidhoggr's Shadow",2022,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 73:
-		set 'EC_Mobs,16;
+		'EC_Mobs =16;
 		areamonster getarg(1),91,94,137,119,"Byorgue",1839,16,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 74:
-		set 'EC_Mobs,12;
+		'EC_Mobs =12;
 		areamonster getarg(1),179,94,225,119,"Lord Knight Seyren",1640,2,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Assassin Cross Eremes",1641,2,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),179,94,225,119,"Whitesmith Howard",1642,2,instance_npcname("EC_Manager")+"::OnMobDead";
@@ -828,14 +828,14 @@ function	script	EC_Spawns	{
 		areamonster getarg(1),179,94,225,119,"High Wizard Kathryne",1645,2,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 75:
-		set 'EC_Mobs,28;
+		'EC_Mobs =28;
 		areamonster getarg(1),265,94,311,119,"Incarnation of Morroc",1918,7,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Incarnation of Morroc",1919,7,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Incarnation of Morroc",1920,7,instance_npcname("EC_Manager")+"::OnMobDead";
 		areamonster getarg(1),265,94,311,119,"Incarnation of Morroc",1921,7,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 76:
-		set 'EC_Mobs,1;
+		'EC_Mobs =1;
 		areamonster getarg(1),349,94,395,119,"Wounded Morroc",1917,1,instance_npcname("EC_Manager")+"::OnMobDead";
 		break;
 	case 77:
@@ -906,9 +906,9 @@ OnTouch:
 	end;
 
 OnEnableAshtimer:
-	set 'give_ash,1;
+	'give_ash = 1;
 	sleep 60000;
-	set 'give_ash,0;
+	'give_ash = 0;
 	end;
 }
 
