@@ -118,7 +118,7 @@ L_Enter:
 	} else {
 		mapannounce "e_tower", strcharinfo(0)+" of the party, " +getarg(3)+", is entering the dungeon, Endless Cellar.",bc_map,"0x00ff99",FW_NORMAL,12;
 		if (getarg(1)) {
-			etower_timer = gettimetick(2);
+			ecellar_timer = gettimetick(2);
 			setquest 25000;
 			setquest 25001;
 		}
